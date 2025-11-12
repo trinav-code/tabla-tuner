@@ -96,15 +96,65 @@
                 <h3 class="text-xl font-bold text-green-700 mb-4">📊 AI Sound Analysis</h3>
                 <div id="aiAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
             </div>
+
+            <button id="advancedButton" class="hidden w-full py-4 rounded-lg font-semibold text-white text-lg bg-indigo-600 hover:bg-indigo-700 mb-4">
+                🔍 Advanced Tension Check (4 positions)
+            </button>
+
+            <div id="guidedCheck" class="hidden mb-6">
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4">Guided Tension Check</h3>
+                    
+                    <div class="flex justify-center mb-6">
+                        <div class="relative w-48 h-48">
+                            <svg viewBox="0 0 200 200" class="w-full h-full">
+                                <circle cx="100" cy="100" r="80" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3"/>
+                                <circle id="pos12" cx="100" cy="20" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos3" cx="180" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos6" cx="100" cy="180" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos9" cx="20" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <text x="100" y="15" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">12</text>
+                                <text x="185" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">3</text>
+                                <text x="100" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">6</text>
+                                <text x="15" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">9</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <p class="text-lg font-bold text-indigo-700" id="guidedInstruction">Hit the tabla at the 12 o'clock position</p>
+                        <p class="text-sm text-gray-600 mt-2">Play 2-3 strokes, then click "Next"</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="guidedNextButton" class="py-3 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700">
+                            Next Position ▶
+                        </button>
+                        <button id="guidedCancelButton" class="py-3 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div id="guidedResults" class="hidden mt-6 p-4 bg-white rounded-lg border-2 border-indigo-200">
+                        <h4 class="font-bold text-indigo-700 mb-2">Position Readings:</h4>
+                        <div id="positionData" class="space-y-1 text-sm"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tensionAnalysisDisplay" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-indigo-700 mb-4">🎯 Tension Balance Analysis</h3>
+                <div id="tensionAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
+            </div>
         </div>
 
         <div class="mt-6 bg-white rounded-xl p-6 shadow-lg">
             <h3 class="text-lg font-bold text-gray-800 mb-3">How to Use:</h3>
             <ol class="list-decimal list-inside space-y-2 text-gray-600">
-                <li>Select raga and singer's scale - AI recommends ideal tabla tuning (purple box)</li>
+                <li>Select raga and singer's scale - AI recommends ideal tabla tuning</li>
                 <li>Click "Start Recording" for real-time pitch detection</li>
-                <li>Click "Quick Sound Check" and play freely for 10 seconds</li>
-                <li>AI analyzes stability and consistency</li>
+                <li><strong>Quick Check:</strong> Play freely for 10 seconds - analyzes overall stability</li>
+                <li><strong>Advanced Check:</strong> Hit 4 positions (12, 3, 6, 9) - finds uneven tension</li>
             </ol>
         </div>
     </div>
@@ -114,27 +164,23 @@
 const noteFreqs = {C:261.63,'C#':277.18,D:293.66,'D#':311.13,E:329.63,F:349.23,'F#':369.99,G:392,'G#':415.3,A:440,'A#':466.16,B:493.88};
 const sargam = {Sa:0,Re:2,Ga:4,Ma:5,Pa:7,Dha:9,Ni:11};
 let isRec=false,ctx,anl,stream,frame,freq,offset=0,recNote,pitches=[],startTime,interval;
+let guidedMode=false,currentPos=0,positionReadings={};
 
-const rBtn=document.getElementById('recordButton'),
-      sMgs=document.getElementById('statusMessage'),
-      fDsp=document.getElementById('frequencyDisplay'),
-      nDsp=document.getElementById('noteDisplay'),
-      fVal=document.getElementById('frequencyValue'),
-      tSts=document.getElementById('tuningStatus'),
-      sTxt=document.getElementById('statusText'),
-      cOff=document.getElementById('centsOffset'),
-      tBar=document.getElementById('tuningBar'),
-      qBtn=document.getElementById('quickAnalysisButton'),
-      aPrg=document.getElementById('analysisProgress'),
-      pBar=document.getElementById('progressBar'),
-      pTxt=document.getElementById('progressText'),
-      pSec=document.getElementById('progressSeconds'),
-      aDsp=document.getElementById('aiAnalysisDisplay'),
-      aCnt=document.getElementById('aiAnalysisContent'),
-      aRec=document.getElementById('aiRecommendation'),
-      rCnt=document.getElementById('recommendationContent'),
-      rSel=document.getElementById('ragaSelect'),
-      sSel=document.getElementById('scaleSelect');
+const rBtn=document.getElementById('recordButton'),sMgs=document.getElementById('statusMessage'),
+      fDsp=document.getElementById('frequencyDisplay'),nDsp=document.getElementById('noteDisplay'),
+      fVal=document.getElementById('frequencyValue'),tSts=document.getElementById('tuningStatus'),
+      sTxt=document.getElementById('statusText'),cOff=document.getElementById('centsOffset'),
+      tBar=document.getElementById('tuningBar'),qBtn=document.getElementById('quickAnalysisButton'),
+      aPrg=document.getElementById('analysisProgress'),pBar=document.getElementById('progressBar'),
+      pTxt=document.getElementById('progressText'),pSec=document.getElementById('progressSeconds'),
+      aDsp=document.getElementById('aiAnalysisDisplay'),aCnt=document.getElementById('aiAnalysisContent'),
+      aRec=document.getElementById('aiRecommendation'),rCnt=document.getElementById('recommendationContent'),
+      rSel=document.getElementById('ragaSelect'),sSel=document.getElementById('scaleSelect'),
+      advBtn=document.getElementById('advancedButton'),gChk=document.getElementById('guidedCheck'),
+      gInst=document.getElementById('guidedInstruction'),gNext=document.getElementById('guidedNextButton'),
+      gCanc=document.getElementById('guidedCancelButton'),gRes=document.getElementById('guidedResults'),
+      posData=document.getElementById('positionData'),taDsp=document.getElementById('tensionAnalysisDisplay'),
+      taCnt=document.getElementById('tensionAnalysisContent');
 
 function calcRec(r,s){
   if(!r||!s)return null;
@@ -188,7 +234,7 @@ async function startRec(){
     sMgs.textContent='Requesting mic...';
     sMgs.classList.remove('hidden');
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    sMgs.textContent='Mic active - play tabla!';
+    sMgs.textContent='Mic active!';
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const src=ctx.createMediaStreamSource(stream);
     anl=ctx.createAnalyser();
@@ -230,7 +276,7 @@ function analyzePitch(){
     if(recNote){
       offset=getCents(f,recNote.frequency);
       const abs=Math.abs(offset);
-      if(abs<10){sTxt.textContent='Perfect! In Tune!';sTxt.className='text-2xl font-bold text-green-500';}
+      if(abs<10){sTxt.textContent='Perfect!';sTxt.className='text-2xl font-bold text-green-500';}
       else if(offset>0){sTxt.textContent='Too High - Loosen';sTxt.className='text-2xl font-bold text-red-500';}
       else{sTxt.textContent='Too Low - Tighten';sTxt.className='text-2xl font-bold text-blue-500';}
       cOff.textContent=`${abs.toFixed(0)} cents ${offset>0?'sharp':'flat'}`;
@@ -242,13 +288,13 @@ function analyzePitch(){
 }
 
 async function quickAnalysis(){
-  if(!rSel.value||!sSel.value){alert('Select raga and scale first');return;}
-  if(!recNote){alert('No recommendation calculated');return;}
+  if(!rSel.value||!sSel.value){alert('Select raga and scale');return;}
   if(!isRec){alert('Start recording first!');return;}
   qBtn.disabled=true;
   qBtn.textContent='Analyzing...';
   aPrg.classList.remove('hidden');
   aDsp.classList.add('hidden');
+  advBtn.classList.add('hidden');
   pitches=[];
   startTime=Date.now();
   interval=setInterval(()=>{
@@ -261,10 +307,11 @@ async function quickAnalysis(){
 }
 
 async function finishAnalysis(){
-  pTxt.textContent='Processing with AI...';
+  pTxt.textContent='Processing...';
   if(pitches.length<10){
-    aCnt.textContent='⚠️ Not enough data. Play more during 10 seconds.';
+    aCnt.textContent='⚠️ Not enough data.';
     aDsp.classList.remove('hidden');
+    advBtn.classList.remove('hidden');
     resetUI();
     return;
   }
@@ -278,8 +325,9 @@ async function finishAnalysis(){
     if(data.error)throw new Error(data.error);
     aCnt.textContent=data.analysis;
     aDsp.classList.remove('hidden');
+    advBtn.classList.remove('hidden');
   }catch(e){
-    aCnt.textContent=`❌ Error: ${e.message}\n\nCheck OPENAI_API_KEY in Netlify.`;
+    aCnt.textContent=`❌ ${e.message}`;
     aDsp.classList.remove('hidden');
   }
   resetUI();
@@ -293,8 +341,96 @@ function resetUI(){
   pSec.textContent='0';
 }
 
+function startGuided(){
+  if(!isRec){alert('Start recording first!');return;}
+  guidedMode=true;
+  currentPos=0;
+  positionReadings={};
+  gChk.classList.remove('hidden');
+  taDsp.classList.add('hidden');
+  gRes.classList.add('hidden');
+  posData.innerHTML='';
+  updateGuidedUI();
+}
+
+function updateGuidedUI(){
+  const positions=['12','3','6','9'];
+  const pos=positions[currentPos];
+  gInst.textContent=`Hit the tabla at the ${pos} o'clock position`;
+  ['pos12','pos3','pos6','pos9'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.setAttribute('fill',i===currentPos?'#6366F1':'#E5E7EB');
+  });
+  if(currentPos===4){
+    gNext.textContent='Analyze Results';
+  }
+}
+
+function guidedNext(){
+  const positions=['12','3','6','9'];
+  if(currentPos<4){
+    const readings=[];
+    const collectStart=Date.now();
+    const collectInt=setInterval(()=>{
+      if(freq)readings.push(freq);
+      if(Date.now()-collectStart>2000){
+        clearInterval(collectInt);
+        const avg=readings.reduce((a,b)=>a+b,0)/readings.length;
+        positionReadings[positions[currentPos]]={freq:avg,count:readings.length};
+        
+        posData.innerHTML+=`<div><strong>${positions[currentPos]} o'clock:</strong> ${avg.toFixed(2)} Hz (${readings.length} readings)</div>`;
+        gRes.classList.remove('hidden');
+        
+        currentPos++;
+        if(currentPos<4){
+          updateGuidedUI();
+        }else{
+          finishGuided();
+        }
+      }
+    },100);
+  }
+}
+
+async function finishGuided(){
+  gInst.textContent='Analyzing tension balance...';
+  gNext.disabled=true;
+  try{
+    const res=await fetch('/.netlify/functions/ai-analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        positionReadings,
+        raga:rSel.value,
+        scale:sSel.value,
+        recommendedNote:recNote,
+        analysisType:'tension'
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    taCnt.textContent=data.analysis;
+    taDsp.classList.remove('hidden');
+    gChk.classList.add('hidden');
+  }catch(e){
+    taCnt.textContent=`❌ ${e.message}`;
+    taDsp.classList.remove('hidden');
+  }
+  gNext.disabled=false;
+  guidedMode=false;
+}
+
+function cancelGuided(){
+  gChk.classList.add('hidden');
+  guidedMode=false;
+  currentPos=0;
+}
+
 rBtn.addEventListener('click',()=>isRec?stopRec():startRec());
 qBtn.addEventListener('click',quickAnalysis);
+advBtn.addEventListener('click',startGuided);
+gNext.addEventListener('click',guidedNext);
+gCanc.addEventListener('click',cancelGuided);
 rSel.addEventListener('change',updateRec);
 sSel.addEventListener('change',updateRec);
     </script>
