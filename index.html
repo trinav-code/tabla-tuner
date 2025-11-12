@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tabla Tuner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-orange-600 mb-2 flex items-center justify-center gap-3">
+                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                    AI Tabla Tuner
+                </h1>
+                <p class="text-gray-600">Tune your tabla with AI-powered precision</p>
+            </div>
+
+            <!-- Input Section -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Select Raga (Optional)
+                    </label>
+                    <select id="ragaSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
+                        <option value="">Choose a raga...</option>
+                        <option value="Yaman">Yaman - Emphasizes G (Pa)</option>
+                        <option value="Bhairav">Bhairav - Emphasizes Db (Re)</option>
+                        <option value="Bilawal">Bilawal - Emphasizes G (Pa)</option>
+                        <option value="Kafi">Kafi - Emphasizes Eb (Ga)</option>
+                        <option value="Bhairavi">Bhairavi - Emphasizes F (Ma)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Scale (Sa Position)
+                    </label>
+                    <select id="scaleSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
+                        <option value="C">C</option>
+                        <option value="C#">C#</option>
+                        <option value="D">D</option>
+                        <option value="D#">D#</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="F#">F#</option>
+                        <option value="G">G</option>
+                        <option value="G#">G#</option>
+                        <option value="A">A</option>
+                        <option value="A#">A#</option>
+                        <option value="B">B</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Target Note for Dayan
+                    </label>
+                    <select id="targetNoteSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
+                        <option value="">Select target note...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Status Message -->
+            <div id="statusMessage" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700 font-medium"></div>
+
+            <!-- Recording Control -->
+            <button id="recordButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg flex items-center justify-center gap-3 transition-colors bg-orange-500 hover:bg-orange-600 mb-8">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+                Start Recording & Detect Pitch
+            </button>
+
+            <!-- Frequency Display -->
+            <div id="frequencyDisplay" class="hidden bg-gradient-to-r from-orange-100 to-amber-100 rounded-xl p-6 mb-8">
+                <div class="text-center mb-4">
+                    <p class="text-sm text-gray-600 mb-1">Detected Frequency</p>
+                    <p id="frequencyValue" class="text-5xl font-bold text-orange-600">0.00 Hz</p>
+                </div>
+
+                <div id="tuningStatus" class="text-center hidden">
+                    <svg id="statusIcon" class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24"></svg>
+                    <p id="statusText" class="text-2xl font-bold">In Tune!</p>
+                    <p id="centsOffset" class="text-lg mt-2">0 cents</p>
+                </div>
+
+                <!-- Visual Tuning Meter -->
+                <div class="mt-6">
+                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-1 h-6 bg-gray-800"></div>
+                        </div>
+                        <div id="tuningBar" class="h-full bg-orange-500 transition-all duration-300" style="width: 50%; margin-left: 0%;"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>Too Low</span>
+                        <span>Perfect</span>
+                        <span>Too High</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Advice Button -->
+            <button id="aiAdviceButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed mb-6 transition-colors">
+                Get AI Tuning Advice
+            </button>
+
+            <!-- AI Advice Display -->
+            <div id="aiAdviceDisplay" class="hidden bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-purple-700 mb-3">AI Tuning Advice</h3>
+                <div id="aiAdviceContent" class="prose prose-sm text-gray-700 whitespace-pre-wrap"></div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-6 bg-white rounded-xl p-6 shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800 mb-3">How to Use:</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                <li>Select your raga and scale (Sa position)</li>
+                <li>Choose the target note you want to tune your dayan to</li>
+                <li>Click "Start Recording" and allow microphone access when prompted</li>
+                <li>Play your tabla - the app will detect the pitch in real-time</li>
+                <li>The visual indicator shows if you're sharp (high) or flat (low)</li>
+                <li>Click "Get AI Tuning Advice" for personalized tuning instructions</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Note frequencies
+        const noteFrequencies = {
+            'C': 261.63, 'C#': 277.18, 'D': 293.66, 'D#': 311.13,
+            'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
+            'G#': 415.30, 'A': 440.00, 'A#': 466.16, 'B': 493.88
+        };
+
+        // State
+        let isRecording = false;
+        let audioContext = null;
+        let analyser = null;
+        let mediaStream = null;
+        let animationFrame = null;
+        let detectedFreq = null;
+        let tuningOffset = 0;
+
+        // DOM elements
+        const recordButton = document.getElementById('recordButton');
+        const statusMessage = document.getElementById('statusMessage');
+        const frequencyDisplay = document.getElementById('frequencyDisplay');
+        const frequencyValue = document.getElementById('frequencyValue');
+        const tuningStatus = document.getElementById('tuningStatus');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const centsOffset = document.getElementById('centsOffset');
+        const tuningBar = document.getElementById('tuningBar');
+        const aiAdviceButton = document.getElementById('aiAdviceButton');
+        const aiAdviceDisplay = document.getElementById('aiAdviceDisplay');
+        const aiAdviceContent = document.getElementById('aiAdviceContent');
+        const ragaSelect = document.getElementById('ragaSelect');
+        const scaleSelect = document.getElementById('scaleSelect');
+        const targetNoteSelect = document.getElementById('targetNoteSelect');
+
+        // Populate target note options
+        Object.keys(noteFrequencies).forEach(note => {
+            const option = document.createElement('option');
+            option.value = note;
+            option.textContent = `${note} (${noteFrequencies[note].toFixed(2)} Hz)`;
+            targetNoteSelect.appendChild(option);
+        });
+
+        // Show status message
+        function showStatus(message) {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            statusMessage.classList.add('hidden');
+        }
+
+        // Pitch detection using autocorrelation
+        function detectPitch(analyser) {
+            const bufferLength = analyser.fftSize;
+            const buffer = new Float32Array(bufferLength);
+            analyser.getFloatTimeDomainData(buffer);
+
+            let bestCorrelation = 0;
+            let bestOffset = -1;
+            const sampleRate = audioContext.sampleRate;
+
+            for (let offset = 1; offset < bufferLength / 2; offset++) {
+                let correlation = 0;
+                for (let i = 0; i < bufferLength / 2; i++) {
+                    correlation += Math.abs(buffer[i] - buffer[i + offset]);
+                }
+                correlation = 1 - correlation / (bufferLength / 2);
+                
+                if (correlation > bestCorrelation) {
+                    bestCorrelation = correlation;
+                    bestOffset = offset;
+                }
+            }
+
+            if (bestCorrelation > 0.9 && bestOffset > 0) {
+                const frequency = sampleRate / bestOffset;
+                return frequency;
+            }
+            return null;
+        }
+
+        // Start recording
+        async function startRecording() {
+            try {
+                console.log('Requesting microphone access...');
+                showStatus('Requesting microphone access...');
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Your browser does not support microphone access. Please use Chrome, Firefox, or Safari.');
+                    return;
+                }
+
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    } 
+                });
+                
+                console.log('Microphone access granted');
+                showStatus('Microphone active - play your tabla!');
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(mediaStream);
+                
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                analyser.smoothingTimeConstant = 0.8;
+                source.connect(analyser);
+
+                isRecording = true;
+                recordButton.innerHTML = `
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Stop Recording
+                `;
+                recordButton.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600');
+
+                frequencyDisplay.classList.remove('hidden');
+                analyzePitch();
+            } catch (err) {
+                console.error('Microphone error:', err);
+                showStatus(`Error: ${err.message}`);
+                alert(`Microphone access error: ${err.message}. Please allow microphone access.`);
+            }
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            
+            isRecording = false;
+            detectedFreq = null;
+            
+            recordButton.innerHTML = `
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+                Start Recording & Detect Pitch
+            `;
+            recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            recordButton.classList.add('bg-orange-500', 'hover:bg-orange-600');
+            
+            frequencyDisplay.classList.add('hidden');
+            hideStatus();
+        }
+
+        // Continuously analyze pitch
+        function analyzePitch() {
+            if (!analyser) return;
+
+            const frequency = detectPitch(analyser);
+            if (frequency && frequency > 100 && frequency < 1000) {
+                detectedFreq = frequency;
+                frequencyValue.textContent = `${frequency.toFixed(2)} Hz`;
+                
+                const targetNote = targetNoteSelect.value;
+                if (targetNote) {
+                    const targetFreq = noteFrequencies[targetNote];
+                    const cents = 1200 * Math.log2(frequency / targetFreq);
+                    tuningOffset = cents;
+                    
+                    updateTuningStatus(cents);
+                }
+            }
+
+            animationFrame = requestAnimationFrame(analyzePitch);
+        }
+
+        // Update tuning status display
+        function updateTuningStatus(cents) {
+            tuningStatus.classList.remove('hidden');
+            
+            const absCents = Math.abs(cents);
+            
+            if (absCents < 10) {
+                statusIcon.innerHTML = '<path d="M5 12h14"/>';
+                statusText.textContent = 'In Tune!';
+                statusText.className = 'text-2xl font-bold text-green-500';
+                statusIcon.className = 'w-12 h-12 mx-auto mb-2 text-green-500';
+            } else if (cents > 0) {
+                statusIcon.innerHTML = '<path d="M7 11l5-5 5 5M12 6v12"/>';
+                statusText.textContent = 'Too High';
+                statusText.className = 'text-2xl font-bold text-red-500';
+                statusIcon.className = 'w-12 h-12 mx-auto mb-2 text-red-500';
+            } else {
+                statusIcon.innerHTML = '<path d="M17 13l-5 5-5-5M12 18V6"/>';
+                statusText.textContent = 'Too Low';
+                statusText.className = 'text-2xl font-bold text-blue-500';
+                statusIcon.className = 'w-12 h-12 mx-auto mb-2 text-blue-500';
+            }
+            
+            centsOffset.textContent = `${absCents.toFixed(0)} cents ${cents > 0 ? 'sharp' : 'flat'}`;
+            
+            // Update tuning bar
+            const barPosition = Math.max(0, Math.min(100, 50 + (cents / 100) * 50));
+            tuningBar.style.width = '50%';
+            tuningBar.style.marginLeft = `${barPosition - 50}%`;
+        }
+
+        // Get AI advice
+        async function getAIAdvice() {
+            if (!detectedFreq || !targetNoteSelect.value) {
+                alert('Please select a target note and play your tabla first.');
+                return;
+            }
+
+            aiAdviceButton.textContent = 'Analyzing with AI...';
+            aiAdviceButton.disabled = true;
+
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{
+                            role: 'user',
+                            content: `I'm tuning a tabla (Indian percussion instrument). Here's the context:
+
+- Target note: ${targetNoteSelect.value}
+- Target frequency: ${noteFrequencies[targetNoteSelect.value].toFixed(2)} Hz
+- Detected frequency: ${detectedFreq.toFixed(2)} Hz
+- Tuning offset: ${tuningOffset.toFixed(0)} cents
+- Raga being played: ${ragaSelect.value || 'Not specified'}
+- Scale (Sa): ${scaleSelect.value}
+
+The tabla consists of two drums:
+- Dayan (right drum): Tuned to a specific pitch, adjusted by tightening/loosening the leather straps
+- Bayan (left drum): Produces bass notes
+
+Please provide:
+1. Whether the drum needs to be tuned higher or lower
+2. Specific tuning instructions (which direction to adjust the straps, how much)
+3. Tips for achieving the best tone for this raga
+4. Any warnings about over-tightening
+
+Keep your response concise and practical.`
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const advice = data.content.find(c => c.type === 'text')?.text || 'Unable to generate advice.';
+                
+                aiAdviceContent.textContent = advice;
+                aiAdviceDisplay.classList.remove('hidden');
+            } catch (err) {
+                aiAdviceContent.textContent = 'Error getting AI advice. Please try again.';
+                aiAdviceDisplay.classList.remove('hidden');
+            } finally {
+                aiAdviceButton.textContent = 'Get AI Tuning Advice';
+                aiAdviceButton.disabled = false;
+            }
+        }
+
+        // Event listeners
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        aiAdviceButton.addEventListener('click', getAIAdvice);
+    </script>
+</body>
+</html>
