@@ -1,507 +1,507 @@
 <!DOCTYPE html>
-2<html lang="en">
-3<head>
-4    <meta charset="UTF-8">
-5    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-6    <title>AI Tabla Tuner</title>
-7    <script src="https://cdn.tailwindcss.com"></script>
-8</head>
-9<body class="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
-10    <div class="max-w-4xl mx-auto">
-11        <div class="bg-white rounded-2xl shadow-xl p-8">
-12            <div class="text-center mb-8">
-13                <h1 class="text-4xl font-bold text-orange-600 mb-2">🎵 AI Tabla Tuner</h1>
-14                <p class="text-gray-600">AI-powered intelligent tabla tuning assistant</p>
-15            </div>
-16
-17            <div class="grid md:grid-cols-2 gap-6 mb-8">
-18                <div>
-19                    <label class="block text-sm font-semibold text-gray-700 mb-2">Select Raga</label>
-20                    <select id="ragaSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
-21                        <option value="">Choose a raga...</option>
-22                        <option value="Yaman">Yaman (Vadi: Ga, Samvadi: Ni)</option>
-23                        <option value="Bhairav">Bhairav (Vadi: Dha, Samvadi: Re)</option>
-24                        <option value="Bilawal">Bilawal (Vadi: Sa, Samvadi: Pa)</option>
-25                        <option value="Kafi">Kafi (Vadi: Pa, Samvadi: Sa)</option>
-26                        <option value="Bhairavi">Bhairavi (Vadi: Ma, Samvadi: Sa)</option>
-27                    </select>
-28                </div>
-29                <div>
-30                    <label class="block text-sm font-semibold text-gray-700 mb-2">Singer's Scale (Sa)</label>
-31                    <select id="scaleSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
-32                        <option value="">Select singer's Sa...</option>
-33                        <option value="C">C</option>
-34                        <option value="C#">C# / Db</option>
-35                        <option value="D">D</option>
-36                        <option value="D#">D# / Eb</option>
-37                        <option value="E">E</option>
-38                        <option value="F">F</option>
-39                        <option value="F#">F# / Gb</option>
-40                        <option value="G">G</option>
-41                        <option value="G#">G# / Ab</option>
-42                        <option value="A">A</option>
-43                        <option value="A#">A# / Bb</option>
-44                        <option value="B">B</option>
-45                    </select>
-46                </div>
-47            </div>
-48
-49            <div id="aiRecommendation" class="hidden bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 mb-8">
-50                <h3 class="text-lg font-bold text-purple-700 mb-3">🎵 AI Recommendation</h3>
-51                <div id="recommendationContent" class="text-gray-700"></div>
-52            </div>
-53
-54            <div id="statusMessage" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700 font-medium"></div>
-55
-56            <button id="recordButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 mb-8">
-57                🎤 Start Recording & Detect Pitch
-58            </button>
-59
-60            <div id="frequencyDisplay" class="hidden bg-gradient-to-r from-orange-100 to-amber-100 rounded-xl p-6 mb-8">
-61                <div class="text-center mb-4">
-62                    <p class="text-sm text-gray-600 mb-1">Detected Note</p>
-63                    <p id="noteDisplay" class="text-5xl font-bold text-orange-600">--</p>
-64                    <p id="frequencyValue" class="text-2xl text-gray-600 mt-2">0.00 Hz</p>
-65                </div>
-66                <div id="tuningStatus" class="text-center hidden">
-67                    <p id="statusText" class="text-2xl font-bold">In Tune!</p>
-68                    <p id="centsOffset" class="text-lg mt-2">0 cents</p>
-69                </div>
-70                <div class="mt-6">
-71                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden relative">
-72                        <div class="absolute inset-0 flex items-center justify-center">
-73                            <div class="w-1 h-6 bg-gray-800"></div>
-74                        </div>
-75                        <div id="tuningBar" class="h-full bg-orange-500 transition-all" style="width:50%;margin-left:0%"></div>
-76                    </div>
-77                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-78                        <span>Too Low</span><span>Perfect</span><span>Too High</span>
-79                    </div>
-80                </div>
-81            </div>
-82
-83            <button id="quickAnalysisButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg bg-green-600 hover:bg-green-700 mb-4">
-84                🎯 Quick Sound Check (10 seconds)
-85            </button>
-86
-87            <div id="analysisProgress" class="hidden mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-88                <p class="text-center text-blue-700 font-medium mb-4"><span id="progressText">Recording...</span></p>
-89                <div class="w-full bg-blue-200 rounded-full h-3">
-90                    <div id="progressBar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
-91                </div>
-92                <p class="text-center text-sm text-gray-600 mt-2"><span id="progressSeconds">0</span>/10 seconds</p>
-93            </div>
-94
-95            <div id="aiAnalysisDisplay" class="hidden bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
-96                <h3 class="text-xl font-bold text-green-700 mb-4">📊 AI Sound Analysis</h3>
-97                <div id="aiAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
-98            </div>
-99
-100            <button id="advancedButton" class="hidden w-full py-4 rounded-lg font-semibold text-white text-lg bg-indigo-600 hover:bg-indigo-700 mb-4">
-101                🔍 Advanced Tension Check (4 positions)
-102            </button>
-103
-104            <div id="guidedCheck" class="hidden mb-6">
-105                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-6">
-106                    <h3 class="text-xl font-bold text-indigo-700 mb-4">Guided Tension Check</h3>
-107                    
-108                    <div class="flex justify-center mb-6">
-109                        <div class="relative w-48 h-48">
-110                            <svg viewBox="0 0 200 200" class="w-full h-full">
-111                                <circle cx="100" cy="100" r="80" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3"/>
-112                                <circle id="pos12" cx="100" cy="20" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
-113                                <circle id="pos3" cx="180" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
-114                                <circle id="pos6" cx="100" cy="180" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
-115                                <circle id="pos9" cx="20" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
-116                                <text x="100" y="15" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">12</text>
-117                                <text x="185" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">3</text>
-118                                <text x="100" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">6</text>
-119                                <text x="15" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">9</text>
-120                            </svg>
-121                        </div>
-122                    </div>
-123
-124                    <div class="text-center mb-4">
-125                        <p class="text-lg font-bold text-indigo-700" id="guidedInstruction">Tap to record at 12 o'clock position</p>
-126                        <p class="text-sm text-gray-600 mt-2" id="guidedSubtext">Recording will last 2 seconds</p>
-127                    </div>
-128
-129                    <div id="recordingProgress" class="hidden mb-4">
-130                        <div class="bg-indigo-200 rounded-full h-2 overflow-hidden">
-131                            <div id="recordingBar" class="bg-indigo-600 h-full transition-all" style="width:0%"></div>
-132                        </div>
-133                        <p class="text-center text-sm text-indigo-600 mt-2">Recording... <span id="recordingSeconds">0.0</span>/2.0s</p>
-134                    </div>
-135
-136                    <div class="grid grid-cols-2 gap-4">
-137                        <button id="guidedRecordButton" class="py-3 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700">
-138                            🎤 Record Position
-139                        </button>
-140                        <button id="guidedCancelButton" class="py-3 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">
-141                            Cancel
-142                        </button>
-143                    </div>
-144
-145                    <div id="guidedResults" class="hidden mt-6 p-4 bg-white rounded-lg border-2 border-indigo-200">
-146                        <h4 class="font-bold text-indigo-700 mb-2">Position Readings:</h4>
-147                        <div id="positionData" class="space-y-1 text-sm"></div>
-148                    </div>
-149                </div>
-150            </div>
-151
-152            <div id="tensionAnalysisDisplay" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6 mb-6">
-153                <h3 class="text-xl font-bold text-indigo-700 mb-4">🎯 Tension Balance Analysis</h3>
-154                <div id="tensionAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
-155            </div>
-156        </div>
-157
-158        <div class="mt-6 bg-white rounded-xl p-6 shadow-lg">
-159            <h3 class="text-lg font-bold text-gray-800 mb-3">How to Use:</h3>
-160            <ol class="list-decimal list-inside space-y-2 text-gray-600">
-161                <li>Select raga and singer's scale - AI recommends ideal tabla tuning</li>
-162                <li>Click "Start Recording" for real-time pitch detection</li>
-163                <li><strong>Quick Check:</strong> Play freely for 10 seconds - analyzes overall stability</li>
-164                <li><strong>Advanced Check:</strong> Record 2 seconds at each of 4 positions (12, 3, 6, 9) - finds uneven tension</li>
-165            </ol>
-166        </div>
-167    </div>
-168
-169    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
-170    <script type="text/babel">
-171const noteFreqs = {C:261.63,'C#':277.18,D:293.66,'D#':311.13,E:329.63,F:349.23,'F#':369.99,G:392,'G#':415.3,A:440,'A#':466.16,B:493.88};
-172const sargam = {Sa:0,Re:2,Ga:4,Ma:5,Pa:7,Dha:9,Ni:11};
-173let isRec=false,ctx,anl,stream,frame,freq,offset=0,recNote,pitches=[],startTime,interval;
-174let guidedMode=false,currentPos=0,positionReadings={},isRecordingPosition=false;
-175
-176const rBtn=document.getElementById('recordButton'),sMgs=document.getElementById('statusMessage'),
-177      fDsp=document.getElementById('frequencyDisplay'),nDsp=document.getElementById('noteDisplay'),
-178      fVal=document.getElementById('frequencyValue'),tSts=document.getElementById('tuningStatus'),
-179      sTxt=document.getElementById('statusText'),cOff=document.getElementById('centsOffset'),
-180      tBar=document.getElementById('tuningBar'),qBtn=document.getElementById('quickAnalysisButton'),
-181      aPrg=document.getElementById('analysisProgress'),pBar=document.getElementById('progressBar'),
-182      pTxt=document.getElementById('progressText'),pSec=document.getElementById('progressSeconds'),
-183      aDsp=document.getElementById('aiAnalysisDisplay'),aCnt=document.getElementById('aiAnalysisContent'),
-184      aRec=document.getElementById('aiRecommendation'),rCnt=document.getElementById('recommendationContent'),
-185      rSel=document.getElementById('ragaSelect'),sSel=document.getElementById('scaleSelect'),
-186      advBtn=document.getElementById('advancedButton'),gChk=document.getElementById('guidedCheck'),
-187      gInst=document.getElementById('guidedInstruction'),gSubtext=document.getElementById('guidedSubtext'),
-188      gRecBtn=document.getElementById('guidedRecordButton'),
-189      gCanc=document.getElementById('guidedCancelButton'),gRes=document.getElementById('guidedResults'),
-190      posData=document.getElementById('positionData'),taDsp=document.getElementById('tensionAnalysisDisplay'),
-191      taCnt=document.getElementById('tensionAnalysisContent'),
-192      recProg=document.getElementById('recordingProgress'),recBar=document.getElementById('recordingBar'),
-193      recSec=document.getElementById('recordingSeconds');
-194
-195function calcRec(r,s){
-196  if(!r||!s)return null;
-197  const rec={Yaman:{sargam:'Pa',reason:'Pa complements Ga vadi'},Bhairav:{sargam:'Sa',reason:'Sa foundation'},
-198    Bilawal:{sargam:'Sa',reason:'Sa matches vadi'},Kafi:{sargam:'Pa',reason:'Pa matches vadi'},
-199    Bhairavi:{sargam:'Ma',reason:'Ma matches vadi'}}[r]||{sargam:'Sa',reason:'Sa safest'};
-200  const notes=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-201  const idx=(notes.indexOf(s)+sargam[rec.sargam])%12;
-202  const note=notes[idx];
-203  const f=noteFreqs[note];
-204  const oct=f<noteFreqs[s]?1:0;
-205  return {note,sargam:rec.sargam,reason:rec.reason,frequency:f*Math.pow(2,oct),octave:4+oct};
-206}
-207
-208function updateRec(){
-209  const r=rSel.value,s=sSel.value;
-210  if(r&&s){
-211    const rec=calcRec(r,s);
-212    if(rec){
-213      recNote=rec;
-214      rCnt.innerHTML=`<p class="mb-2"><strong>Recommended:</strong> <span class="text-2xl font-bold text-purple-700">${rec.note}${rec.octave}</span> (${rec.sargam} of ${s})</p><p class="text-sm text-gray-600">Target: ${rec.frequency.toFixed(2)} Hz</p><p class="text-sm mt-2"><em>${rec.reason}</em></p>`;
-215      aRec.classList.remove('hidden');
-216    }
-217  }else{aRec.classList.add('hidden');recNote=null;}
-218}
-219
-220function freqToNote(f){
-221  const hs=Math.round(12*Math.log2(f/(440*Math.pow(2,-4.75))));
-222  const oct=Math.floor(hs/12);
-223  const notes=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-224  return {note:notes[hs%12],octave:oct};
-225}
-226
-227function getCents(f,t){return 1200*Math.log2(f/t);}
-228
-229function detectPitch(a){
-230  const buf=new Float32Array(a.fftSize);
-231  a.getFloatTimeDomainData(buf);
-232  let best=0,off=-1,sr=ctx.sampleRate;
-233  for(let o=1;o<buf.length/2;o++){
-234    let cor=0;
-235    for(let i=0;i<buf.length/2;i++)cor+=Math.abs(buf[i]-buf[i+o]);
-236    cor=1-cor/(buf.length/2);
-237    if(cor>best){best=cor;off=o;}
-238  }
-239  return best>0.9&&off>0?sr/off:null;
-240}
-241
-242async function startRec(){
-243  try{
-244    sMgs.textContent='Requesting mic...';
-245    sMgs.classList.remove('hidden');
-246    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-247    sMgs.textContent='Mic active!';
-248    ctx=new (window.AudioContext||window.webkitAudioContext)();
-249    const src=ctx.createMediaStreamSource(stream);
-250    anl=ctx.createAnalyser();
-251    anl.fftSize=2048;
-252    anl.smoothingTimeConstant=0.8;
-253    src.connect(anl);
-254    isRec=true;
-255    rBtn.innerHTML='⏹️ Stop Recording';
-256    rBtn.classList.remove('bg-orange-500','hover:bg-orange-600');
-257    rBtn.classList.add('bg-red-500','hover:bg-red-600');
-258    fDsp.classList.remove('hidden');
-259    analyzePitch();
-260  }catch(e){alert('Mic error: '+e.message);}
-261}
-262
-263function stopRec(){
-264  if(stream)stream.getTracks().forEach(t=>t.stop());
-265  if(frame)cancelAnimationFrame(frame);
-266  if(ctx)ctx.close();
-267  isRec=false;freq=null;
-268  rBtn.innerHTML='🎤 Start Recording & Detect Pitch';
-269  rBtn.classList.remove('bg-red-500','hover:bg-red-600');
-270  rBtn.classList.add('bg-orange-500','hover:bg-orange-600');
-271  fDsp.classList.add('hidden');
-272  sMgs.classList.add('hidden');
-273}
-274
-275function analyzePitch(){
-276  if(!anl)return;
-277  const f=detectPitch(anl);
-278  if(f&&f>100&&f<1000){
-279    freq=f;
-280    const n=freqToNote(f);
-281    const nf=noteFreqs[n.note]*Math.pow(2,n.octave-4);
-282    const c=getCents(f,nf);
-283    const cd=c>=0?`+${c.toFixed(0)}`:`${c.toFixed(0)}`;
-284    nDsp.textContent=`${n.note}${n.octave}`;
-285    fVal.textContent=`${f.toFixed(2)} Hz (${cd} cents)`;
-286    if(recNote){
-287      offset=getCents(f,recNote.frequency);
-288      const abs=Math.abs(offset);
-289      if(abs<10){sTxt.textContent='Perfect!';sTxt.className='text-2xl font-bold text-green-500';}
-290      else if(offset>0){sTxt.textContent='Too High - Loosen';sTxt.className='text-2xl font-bold text-red-500';}
-291      else{sTxt.textContent='Too Low - Tighten';sTxt.className='text-2xl font-bold text-blue-500';}
-292      cOff.textContent=`${abs.toFixed(0)} cents ${offset>0?'sharp':'flat'}`;
-293      tBar.style.marginLeft=`${Math.max(0,Math.min(100,50+(offset/100)*50))-50}%`;
-294      tSts.classList.remove('hidden');
-295    }
-296  }
-297  frame=requestAnimationFrame(analyzePitch);
-298}
-299
-300async function quickAnalysis(){
-301  if(!rSel.value||!sSel.value){alert('Select raga and scale');return;}
-302  if(!isRec){alert('Start recording first!');return;}
-303  qBtn.disabled=true;
-304  qBtn.textContent='Analyzing...';
-305  aPrg.classList.remove('hidden');
-306  aDsp.classList.add('hidden');
-307  advBtn.classList.add('hidden');
-308  pitches=[];
-309  startTime=Date.now();
-310  interval=setInterval(()=>{
-311    const e=(Date.now()-startTime)/1000;
-312    pSec.textContent=Math.floor(e);
-313    pBar.style.width=`${(e/10)*100}%`;
-314    if(freq)pitches.push(freq);
-315    if(e>=10){clearInterval(interval);finishAnalysis();}
-316  },100);
-317}
-318
-319async function finishAnalysis(){
-320  pTxt.textContent='Processing...';
-321  if(pitches.length<10){
-322    aCnt.textContent='⚠️ Not enough data.';
-323    aDsp.classList.remove('hidden');
-324    advBtn.classList.remove('hidden');
-325    resetUI();
-326    return;
-327  }
-328  try{
-329    const res=await fetch('/.netlify/functions/ai-analyze',{
-330      method:'POST',
-331      headers:{'Content-Type':'application/json'},
-332      body:JSON.stringify({pitches,raga:rSel.value,scale:sSel.value,recommendedNote:recNote})
-333    });
-334    const data=await res.json();
-335    if(data.error)throw new Error(data.error);
-336    aCnt.textContent=data.analysis;
-337    aDsp.classList.remove('hidden');
-338    advBtn.classList.remove('hidden');
-339  }catch(e){
-340    aCnt.textContent=`❌ ${e.message}`;
-341    aDsp.classList.remove('hidden');
-342  }
-343  resetUI();
-344}
-345
-346function resetUI(){
-347  qBtn.disabled=false;
-348  qBtn.textContent='🎯 Quick Sound Check (10 seconds)';
-349  aPrg.classList.add('hidden');
-350  pBar.style.width='0%';
-351  pSec.textContent='0';
-352}
-353
-354function startGuided(){
-355  if(!isRec){alert('Start recording first!');return;}
-356  guidedMode=true;
-357  currentPos=0;
-358  positionReadings={};
-359  gChk.classList.remove('hidden');
-360  taDsp.classList.add('hidden');
-361  gRes.classList.add('hidden');
-362  posData.innerHTML='';
-363  updateGuidedUI();
-364}
-365
-366function updateGuidedUI(){
-367  const positions=['12','3','6','9'];
-368  const pos=positions[currentPos];
-369  
-370  if(currentPos<4){
-371    gInst.textContent=`Tap to record at ${pos} o'clock position`;
-372    gSubtext.textContent='Recording will last 2 seconds';
-373    gRecBtn.textContent='🎤 Record Position';
-374    gRecBtn.disabled=false;
-375  }else{
-376    gInst.textContent='All positions recorded!';
-377    gSubtext.textContent='Click Analyze to see results';
-378    gRecBtn.textContent='📊 Analyze Results';
-379    gRecBtn.disabled=false;
-380  }
-381  
-382  // Update visual indicators
-383  ['pos12','pos3','pos6','pos9'].forEach((id,i)=>{
-384    const el=document.getElementById(id);
-385    if(i<currentPos){
-386      el.setAttribute('fill','#10B981'); // Green for completed
-387    }else if(i===currentPos){
-388      el.setAttribute('fill','#6366F1'); // Blue for current
-389    }else{
-390      el.setAttribute('fill','#E5E7EB'); // Gray for not started
-391    }
-392  });
-393}
-394
-395async function recordPosition(){
-396  if(isRecordingPosition)return;
-397  
-398  const positions=['12','3','6','9'];
-399  
-400  if(currentPos>=4){
-401    // All positions recorded, now analyze
-402    finishGuided();
-403    return;
-404  }
-405  
-406  isRecordingPosition=true;
-407  gRecBtn.disabled=true;
-408  gRecBtn.textContent='Recording...';
-409  recProg.classList.remove('hidden');
-410  
-411  const positionPitches=[];
-412  const recordStart=Date.now();
-413  const recordingDuration=2000; // 2 seconds
-414  
-415  const recordInterval=setInterval(()=>{
-416    const elapsed=(Date.now()-recordStart)/1000;
-417    recSec.textContent=elapsed.toFixed(1);
-418    recBar.style.width=`${(elapsed/2)*100}%`;
-419    
-420    // Collect pitch data
-421    if(freq&&freq>100&&freq<1000){
-422      positionPitches.push(freq);
-423    }
-424    
-425    if(Date.now()-recordStart>=recordingDuration){
-426      clearInterval(recordInterval);
-427      
-428      // Calculate average for this position
-429      if(positionPitches.length>0){
-430        const avg=positionPitches.reduce((a,b)=>a+b,0)/positionPitches.length;
-431        positionReadings[positions[currentPos]]={
-432          freq:avg,
-433          count:positionPitches.length,
-434          readings:positionPitches
-435        };
-436        
-437        // Display result
-438        const posDiv=document.createElement('div');
-439        posDiv.className='flex justify-between items-center py-1';
-440        posDiv.innerHTML=`<span><strong>${positions[currentPos]} o'clock:</strong> ${avg.toFixed(2)} Hz</span><span class="text-green-600">✓ ${positionPitches.length} readings</span>`;
-441        posData.appendChild(posDiv);
-442        gRes.classList.remove('hidden');
-443      }else{
-444        alert(`No valid readings at position ${positions[currentPos]}. Please try again.`);
-445      }
-446      
-447      // Reset UI and move to next
-448      recProg.classList.add('hidden');
-449      recBar.style.width='0%';
-450      recSec.textContent='0.0';
-451      isRecordingPosition=false;
-452      
-453      currentPos++;
-454      updateGuidedUI();
-455    }
-456  },50); // Check every 50ms for smoother updates
-457}
-458
-459async function finishGuided(){
-460  gInst.textContent='Analyzing tension balance...';
-461  gSubtext.textContent='Please wait...';
-462  gRecBtn.disabled=true;
-463  
-464  try{
-465    const res=await fetch('/.netlify/functions/ai-analyze',{
-466      method:'POST',
-467      headers:{'Content-Type':'application/json'},
-468      body:JSON.stringify({
-469        positionReadings,
-470        raga:rSel.value,
-471        scale:sSel.value,
-472        recommendedNote:recNote,
-473        analysisType:'tension'
-474      })
-475    });
-476    const data=await res.json();
-477    if(data.error)throw new Error(data.error);
-478    taCnt.textContent=data.analysis;
-479    taDsp.classList.remove('hidden');
-480    gChk.classList.add('hidden');
-481  }catch(e){
-482    taCnt.textContent=`❌ ${e.message}`;
-483    taDsp.classList.remove('hidden');
-484  }
-485  
-486  gRecBtn.disabled=false;
-487  guidedMode=false;
-488}
-489
-490function cancelGuided(){
-491  gChk.classList.add('hidden');
-492  guidedMode=false;
-493  currentPos=0;
-494  isRecordingPosition=false;
-495  recProg.classList.add('hidden');
-496}
-497
-498rBtn.addEventListener('click',()=>isRec?stopRec():startRec());
-499qBtn.addEventListener('click',quickAnalysis);
-500advBtn.addEventListener('click',startGuided);
-501gRecBtn.addEventListener('click',recordPosition);
-502gCanc.addEventListener('click',cancelGuided);
-503rSel.addEventListener('change',updateRec);
-504sSel.addEventListener('change',updateRec);
-505    </script>
-506</body>
-507</html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tabla Tuner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-orange-600 mb-2">🎵 AI Tabla Tuner</h1>
+                <p class="text-gray-600">AI-powered intelligent tabla tuning assistant</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Select Raga</label>
+                    <select id="ragaSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
+                        <option value="">Choose a raga...</option>
+                        <option value="Yaman">Yaman (Vadi: Ga, Samvadi: Ni)</option>
+                        <option value="Bhairav">Bhairav (Vadi: Dha, Samvadi: Re)</option>
+                        <option value="Bilawal">Bilawal (Vadi: Sa, Samvadi: Pa)</option>
+                        <option value="Kafi">Kafi (Vadi: Pa, Samvadi: Sa)</option>
+                        <option value="Bhairavi">Bhairavi (Vadi: Ma, Samvadi: Sa)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Singer's Scale (Sa)</label>
+                    <select id="scaleSelect" class="w-full p-3 border-2 border-orange-200 rounded-lg focus:border-orange-400 focus:outline-none">
+                        <option value="">Select singer's Sa...</option>
+                        <option value="C">C</option>
+                        <option value="C#">C# / Db</option>
+                        <option value="D">D</option>
+                        <option value="D#">D# / Eb</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="F#">F# / Gb</option>
+                        <option value="G">G</option>
+                        <option value="G#">G# / Ab</option>
+                        <option value="A">A</option>
+                        <option value="A#">A# / Bb</option>
+                        <option value="B">B</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="aiRecommendation" class="hidden bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 mb-8">
+                <h3 class="text-lg font-bold text-purple-700 mb-3">🎵 AI Recommendation</h3>
+                <div id="recommendationContent" class="text-gray-700"></div>
+            </div>
+
+            <div id="statusMessage" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700 font-medium"></div>
+
+            <button id="recordButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 mb-8">
+                🎤 Start Recording & Detect Pitch
+            </button>
+
+            <div id="frequencyDisplay" class="hidden bg-gradient-to-r from-orange-100 to-amber-100 rounded-xl p-6 mb-8">
+                <div class="text-center mb-4">
+                    <p class="text-sm text-gray-600 mb-1">Detected Note</p>
+                    <p id="noteDisplay" class="text-5xl font-bold text-orange-600">--</p>
+                    <p id="frequencyValue" class="text-2xl text-gray-600 mt-2">0.00 Hz</p>
+                </div>
+                <div id="tuningStatus" class="text-center hidden">
+                    <p id="statusText" class="text-2xl font-bold">In Tune!</p>
+                    <p id="centsOffset" class="text-lg mt-2">0 cents</p>
+                </div>
+                <div class="mt-6">
+                    <div class="h-4 bg-gray-200 rounded-full overflow-hidden relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-1 h-6 bg-gray-800"></div>
+                        </div>
+                        <div id="tuningBar" class="h-full bg-orange-500 transition-all" style="width:50%;margin-left:0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>Too Low</span><span>Perfect</span><span>Too High</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="quickAnalysisButton" class="w-full py-4 rounded-lg font-semibold text-white text-lg bg-green-600 hover:bg-green-700 mb-4">
+                🎯 Quick Sound Check (10 seconds)
+            </button>
+
+            <div id="analysisProgress" class="hidden mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                <p class="text-center text-blue-700 font-medium mb-4"><span id="progressText">Recording...</span></p>
+                <div class="w-full bg-blue-200 rounded-full h-3">
+                    <div id="progressBar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
+                </div>
+                <p class="text-center text-sm text-gray-600 mt-2"><span id="progressSeconds">0</span>/10 seconds</p>
+            </div>
+
+            <div id="aiAnalysisDisplay" class="hidden bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-green-700 mb-4">📊 AI Sound Analysis</h3>
+                <div id="aiAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
+            </div>
+
+            <button id="advancedButton" class="hidden w-full py-4 rounded-lg font-semibold text-white text-lg bg-indigo-600 hover:bg-indigo-700 mb-4">
+                🔍 Advanced Tension Check (4 positions)
+            </button>
+
+            <div id="guidedCheck" class="hidden mb-6">
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4">Guided Tension Check</h3>
+                    
+                    <div class="flex justify-center mb-6">
+                        <div class="relative w-48 h-48">
+                            <svg viewBox="0 0 200 200" class="w-full h-full">
+                                <circle cx="100" cy="100" r="80" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3"/>
+                                <circle id="pos12" cx="100" cy="20" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos3" cx="180" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos6" cx="100" cy="180" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <circle id="pos9" cx="20" cy="100" r="15" fill="#E5E7EB" stroke="#6B7280" stroke-width="2"/>
+                                <text x="100" y="15" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">12</text>
+                                <text x="185" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">3</text>
+                                <text x="100" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">6</text>
+                                <text x="15" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">9</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <p class="text-lg font-bold text-indigo-700" id="guidedInstruction">Tap to record at 12 o'clock position</p>
+                        <p class="text-sm text-gray-600 mt-2" id="guidedSubtext">Recording will last 2 seconds</p>
+                    </div>
+
+                    <div id="recordingProgress" class="hidden mb-4">
+                        <div class="bg-indigo-200 rounded-full h-2 overflow-hidden">
+                            <div id="recordingBar" class="bg-indigo-600 h-full transition-all" style="width:0%"></div>
+                        </div>
+                        <p class="text-center text-sm text-indigo-600 mt-2">Recording... <span id="recordingSeconds">0.0</span>/2.0s</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="guidedRecordButton" class="py-3 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700">
+                            🎤 Record Position
+                        </button>
+                        <button id="guidedCancelButton" class="py-3 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div id="guidedResults" class="hidden mt-6 p-4 bg-white rounded-lg border-2 border-indigo-200">
+                        <h4 class="font-bold text-indigo-700 mb-2">Position Readings:</h4>
+                        <div id="positionData" class="space-y-1 text-sm"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tensionAnalysisDisplay" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-indigo-700 mb-4">🎯 Tension Balance Analysis</h3>
+                <div id="tensionAnalysisContent" class="text-gray-700 whitespace-pre-wrap"></div>
+            </div>
+        </div>
+
+        <div class="mt-6 bg-white rounded-xl p-6 shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800 mb-3">How to Use:</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                <li>Select raga and singer's scale - AI recommends ideal tabla tuning</li>
+                <li>Click "Start Recording" for real-time pitch detection</li>
+                <li><strong>Quick Check:</strong> Play freely for 10 seconds - analyzes overall stability</li>
+                <li><strong>Advanced Check:</strong> Record 2 seconds at each of 4 positions (12, 3, 6, 9) - finds uneven tension</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script type="text/babel">
+const noteFreqs = {C:261.63,'C#':277.18,D:293.66,'D#':311.13,E:329.63,F:349.23,'F#':369.99,G:392,'G#':415.3,A:440,'A#':466.16,B:493.88};
+const sargam = {Sa:0,Re:2,Ga:4,Ma:5,Pa:7,Dha:9,Ni:11};
+let isRec=false,ctx,anl,stream,frame,freq,offset=0,recNote,pitches=[],startTime,interval;
+let guidedMode=false,currentPos=0,positionReadings={},isRecordingPosition=false;
+
+const rBtn=document.getElementById('recordButton'),sMgs=document.getElementById('statusMessage'),
+      fDsp=document.getElementById('frequencyDisplay'),nDsp=document.getElementById('noteDisplay'),
+      fVal=document.getElementById('frequencyValue'),tSts=document.getElementById('tuningStatus'),
+      sTxt=document.getElementById('statusText'),cOff=document.getElementById('centsOffset'),
+      tBar=document.getElementById('tuningBar'),qBtn=document.getElementById('quickAnalysisButton'),
+      aPrg=document.getElementById('analysisProgress'),pBar=document.getElementById('progressBar'),
+      pTxt=document.getElementById('progressText'),pSec=document.getElementById('progressSeconds'),
+      aDsp=document.getElementById('aiAnalysisDisplay'),aCnt=document.getElementById('aiAnalysisContent'),
+      aRec=document.getElementById('aiRecommendation'),rCnt=document.getElementById('recommendationContent'),
+      rSel=document.getElementById('ragaSelect'),sSel=document.getElementById('scaleSelect'),
+      advBtn=document.getElementById('advancedButton'),gChk=document.getElementById('guidedCheck'),
+      gInst=document.getElementById('guidedInstruction'),gSubtext=document.getElementById('guidedSubtext'),
+      gRecBtn=document.getElementById('guidedRecordButton'),
+      gCanc=document.getElementById('guidedCancelButton'),gRes=document.getElementById('guidedResults'),
+      posData=document.getElementById('positionData'),taDsp=document.getElementById('tensionAnalysisDisplay'),
+      taCnt=document.getElementById('tensionAnalysisContent'),
+      recProg=document.getElementById('recordingProgress'),recBar=document.getElementById('recordingBar'),
+      recSec=document.getElementById('recordingSeconds');
+
+function calcRec(r,s){
+  if(!r||!s)return null;
+  const rec={Yaman:{sargam:'Pa',reason:'Pa complements Ga vadi'},Bhairav:{sargam:'Sa',reason:'Sa foundation'},
+    Bilawal:{sargam:'Sa',reason:'Sa matches vadi'},Kafi:{sargam:'Pa',reason:'Pa matches vadi'},
+    Bhairavi:{sargam:'Ma',reason:'Ma matches vadi'}}[r]||{sargam:'Sa',reason:'Sa safest'};
+  const notes=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const idx=(notes.indexOf(s)+sargam[rec.sargam])%12;
+  const note=notes[idx];
+  const f=noteFreqs[note];
+  const oct=f<noteFreqs[s]?1:0;
+  return {note,sargam:rec.sargam,reason:rec.reason,frequency:f*Math.pow(2,oct),octave:4+oct};
+}
+
+function updateRec(){
+  const r=rSel.value,s=sSel.value;
+  if(r&&s){
+    const rec=calcRec(r,s);
+    if(rec){
+      recNote=rec;
+      rCnt.innerHTML=`<p class="mb-2"><strong>Recommended:</strong> <span class="text-2xl font-bold text-purple-700">${rec.note}${rec.octave}</span> (${rec.sargam} of ${s})</p><p class="text-sm text-gray-600">Target: ${rec.frequency.toFixed(2)} Hz</p><p class="text-sm mt-2"><em>${rec.reason}</em></p>`;
+      aRec.classList.remove('hidden');
+    }
+  }else{aRec.classList.add('hidden');recNote=null;}
+}
+
+function freqToNote(f){
+  const hs=Math.round(12*Math.log2(f/(440*Math.pow(2,-4.75))));
+  const oct=Math.floor(hs/12);
+  const notes=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  return {note:notes[hs%12],octave:oct};
+}
+
+function getCents(f,t){return 1200*Math.log2(f/t);}
+
+function detectPitch(a){
+  const buf=new Float32Array(a.fftSize);
+  a.getFloatTimeDomainData(buf);
+  let best=0,off=-1,sr=ctx.sampleRate;
+  for(let o=1;o<buf.length/2;o++){
+    let cor=0;
+    for(let i=0;i<buf.length/2;i++)cor+=Math.abs(buf[i]-buf[i+o]);
+    cor=1-cor/(buf.length/2);
+    if(cor>best){best=cor;off=o;}
+  }
+  return best>0.9&&off>0?sr/off:null;
+}
+
+async function startRec(){
+  try{
+    sMgs.textContent='Requesting mic...';
+    sMgs.classList.remove('hidden');
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    sMgs.textContent='Mic active!';
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=ctx.createMediaStreamSource(stream);
+    anl=ctx.createAnalyser();
+    anl.fftSize=2048;
+    anl.smoothingTimeConstant=0.8;
+    src.connect(anl);
+    isRec=true;
+    rBtn.innerHTML='⏹️ Stop Recording';
+    rBtn.classList.remove('bg-orange-500','hover:bg-orange-600');
+    rBtn.classList.add('bg-red-500','hover:bg-red-600');
+    fDsp.classList.remove('hidden');
+    analyzePitch();
+  }catch(e){alert('Mic error: '+e.message);}
+}
+
+function stopRec(){
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(frame)cancelAnimationFrame(frame);
+  if(ctx)ctx.close();
+  isRec=false;freq=null;
+  rBtn.innerHTML='🎤 Start Recording & Detect Pitch';
+  rBtn.classList.remove('bg-red-500','hover:bg-red-600');
+  rBtn.classList.add('bg-orange-500','hover:bg-orange-600');
+  fDsp.classList.add('hidden');
+  sMgs.classList.add('hidden');
+}
+
+function analyzePitch(){
+  if(!anl)return;
+  const f=detectPitch(anl);
+  if(f&&f>100&&f<1000){
+    freq=f;
+    const n=freqToNote(f);
+    const nf=noteFreqs[n.note]*Math.pow(2,n.octave-4);
+    const c=getCents(f,nf);
+    const cd=c>=0?`+${c.toFixed(0)}`:`${c.toFixed(0)}`;
+    nDsp.textContent=`${n.note}${n.octave}`;
+    fVal.textContent=`${f.toFixed(2)} Hz (${cd} cents)`;
+    if(recNote){
+      offset=getCents(f,recNote.frequency);
+      const abs=Math.abs(offset);
+      if(abs<10){sTxt.textContent='Perfect!';sTxt.className='text-2xl font-bold text-green-500';}
+      else if(offset>0){sTxt.textContent='Too High - Loosen';sTxt.className='text-2xl font-bold text-red-500';}
+      else{sTxt.textContent='Too Low - Tighten';sTxt.className='text-2xl font-bold text-blue-500';}
+      cOff.textContent=`${abs.toFixed(0)} cents ${offset>0?'sharp':'flat'}`;
+      tBar.style.marginLeft=`${Math.max(0,Math.min(100,50+(offset/100)*50))-50}%`;
+      tSts.classList.remove('hidden');
+    }
+  }
+  frame=requestAnimationFrame(analyzePitch);
+}
+
+async function quickAnalysis(){
+  if(!rSel.value||!sSel.value){alert('Select raga and scale');return;}
+  if(!isRec){alert('Start recording first!');return;}
+  qBtn.disabled=true;
+  qBtn.textContent='Analyzing...';
+  aPrg.classList.remove('hidden');
+  aDsp.classList.add('hidden');
+  advBtn.classList.add('hidden');
+  pitches=[];
+  startTime=Date.now();
+  interval=setInterval(()=>{
+    const e=(Date.now()-startTime)/1000;
+    pSec.textContent=Math.floor(e);
+    pBar.style.width=`${(e/10)*100}%`;
+    if(freq)pitches.push(freq);
+    if(e>=10){clearInterval(interval);finishAnalysis();}
+  },100);
+}
+
+async function finishAnalysis(){
+  pTxt.textContent='Processing...';
+  if(pitches.length<10){
+    aCnt.textContent='⚠️ Not enough data.';
+    aDsp.classList.remove('hidden');
+    advBtn.classList.remove('hidden');
+    resetUI();
+    return;
+  }
+  try{
+    const res=await fetch('/.netlify/functions/ai-analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pitches,raga:rSel.value,scale:sSel.value,recommendedNote:recNote})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    aCnt.textContent=data.analysis;
+    aDsp.classList.remove('hidden');
+    advBtn.classList.remove('hidden');
+  }catch(e){
+    aCnt.textContent=`❌ ${e.message}`;
+    aDsp.classList.remove('hidden');
+  }
+  resetUI();
+}
+
+function resetUI(){
+  qBtn.disabled=false;
+  qBtn.textContent='🎯 Quick Sound Check (10 seconds)';
+  aPrg.classList.add('hidden');
+  pBar.style.width='0%';
+  pSec.textContent='0';
+}
+
+function startGuided(){
+  if(!isRec){alert('Start recording first!');return;}
+  guidedMode=true;
+  currentPos=0;
+  positionReadings={};
+  gChk.classList.remove('hidden');
+  taDsp.classList.add('hidden');
+  gRes.classList.add('hidden');
+  posData.innerHTML='';
+  updateGuidedUI();
+}
+
+function updateGuidedUI(){
+  const positions=['12','3','6','9'];
+  const pos=positions[currentPos];
+  
+  if(currentPos<4){
+    gInst.textContent=`Tap to record at ${pos} o'clock position`;
+    gSubtext.textContent='Recording will last 2 seconds';
+    gRecBtn.textContent='🎤 Record Position';
+    gRecBtn.disabled=false;
+  }else{
+    gInst.textContent='All positions recorded!';
+    gSubtext.textContent='Click Analyze to see results';
+    gRecBtn.textContent='📊 Analyze Results';
+    gRecBtn.disabled=false;
+  }
+  
+  // Update visual indicators
+  ['pos12','pos3','pos6','pos9'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(i<currentPos){
+      el.setAttribute('fill','#10B981'); // Green for completed
+    }else if(i===currentPos){
+      el.setAttribute('fill','#6366F1'); // Blue for current
+    }else{
+      el.setAttribute('fill','#E5E7EB'); // Gray for not started
+    }
+  });
+}
+
+async function recordPosition(){
+  if(isRecordingPosition)return;
+  
+  const positions=['12','3','6','9'];
+  
+  if(currentPos>=4){
+    // All positions recorded, now analyze
+    finishGuided();
+    return;
+  }
+  
+  isRecordingPosition=true;
+  gRecBtn.disabled=true;
+  gRecBtn.textContent='Recording...';
+  recProg.classList.remove('hidden');
+  
+  const positionPitches=[];
+  const recordStart=Date.now();
+  const recordingDuration=2000; // 2 seconds
+  
+  const recordInterval=setInterval(()=>{
+    const elapsed=(Date.now()-recordStart)/1000;
+    recSec.textContent=elapsed.toFixed(1);
+    recBar.style.width=`${(elapsed/2)*100}%`;
+    
+    // Collect pitch data
+    if(freq&&freq>100&&freq<1000){
+      positionPitches.push(freq);
+    }
+    
+    if(Date.now()-recordStart>=recordingDuration){
+      clearInterval(recordInterval);
+      
+      // Calculate average for this position
+      if(positionPitches.length>0){
+        const avg=positionPitches.reduce((a,b)=>a+b,0)/positionPitches.length;
+        positionReadings[positions[currentPos]]={
+          freq:avg,
+          count:positionPitches.length,
+          readings:positionPitches
+        };
+        
+        // Display result
+        const posDiv=document.createElement('div');
+        posDiv.className='flex justify-between items-center py-1';
+        posDiv.innerHTML=`<span><strong>${positions[currentPos]} o'clock:</strong> ${avg.toFixed(2)} Hz</span><span class="text-green-600">✓ ${positionPitches.length} readings</span>`;
+        posData.appendChild(posDiv);
+        gRes.classList.remove('hidden');
+      }else{
+        alert(`No valid readings at position ${positions[currentPos]}. Please try again.`);
+      }
+      
+      // Reset UI and move to next
+      recProg.classList.add('hidden');
+      recBar.style.width='0%';
+      recSec.textContent='0.0';
+      isRecordingPosition=false;
+      
+      currentPos++;
+      updateGuidedUI();
+    }
+  },50); // Check every 50ms for smoother updates
+}
+
+async function finishGuided(){
+  gInst.textContent='Analyzing tension balance...';
+  gSubtext.textContent='Please wait...';
+  gRecBtn.disabled=true;
+  
+  try{
+    const res=await fetch('/.netlify/functions/ai-analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        positionReadings,
+        raga:rSel.value,
+        scale:sSel.value,
+        recommendedNote:recNote,
+        analysisType:'tension'
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    taCnt.textContent=data.analysis;
+    taDsp.classList.remove('hidden');
+    gChk.classList.add('hidden');
+  }catch(e){
+    taCnt.textContent=`❌ ${e.message}`;
+    taDsp.classList.remove('hidden');
+  }
+  
+  gRecBtn.disabled=false;
+  guidedMode=false;
+}
+
+function cancelGuided(){
+  gChk.classList.add('hidden');
+  guidedMode=false;
+  currentPos=0;
+  isRecordingPosition=false;
+  recProg.classList.add('hidden');
+}
+
+rBtn.addEventListener('click',()=>isRec?stopRec():startRec());
+qBtn.addEventListener('click',quickAnalysis);
+advBtn.addEventListener('click',startGuided);
+gRecBtn.addEventListener('click',recordPosition);
+gCanc.addEventListener('click',cancelGuided);
+rSel.addEventListener('change',updateRec);
+sSel.addEventListener('change',updateRec);
+    </script>
+</body>
+</html>
